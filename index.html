@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>İngilis Sözləri | Lüğət və Quiz</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121a2b;
+      --text: #e7eefc;
+      --muted: #9fb0d1;
+      --accent: #66a3ff;
+      --accent-2: #7ce2c3;
+      --danger: #ff6b6b;
+      --border: #1e2a44;
+    }
+    [data-theme="light"] {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #0b1220;
+      --muted: #51607e;
+      --accent: #2557e0;
+      --accent-2: #0f9d58;
+      --danger: #c81e1e;
+      --border: #e6e8ef;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(180deg, var(--bg), #0f172a 60%);
+      color: var(--text);
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap: 16px; margin-bottom: 20px; }
+    h1 { font-size: clamp(22px, 2.6vw, 34px); margin: 0; letter-spacing: 0.2px; }
+    .sub { color: var(--muted); font-size: 14px; }
+
+    .toolbar { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 720px) {
+      .toolbar { grid-template-columns: 1fr auto auto auto; align-items: center; }
+    }
+    .card { background: var(--card); border:1px solid var(--border); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    .pad { padding: 16px; }
+    input, select, button, textarea { font: inherit; color: inherit; }
+    .input { width: 100%; padding: 10px 12px; border-radius: 12px; border:1px solid var(--border); background: transparent; outline: none; }
+    .btn { padding: 10px 14px; border-radius: 12px; border:1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; transition: .2s; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+    .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #081325; border: none; }
+    .btn.ghost { background: transparent; }
+    .btn.danger { background: var(--danger); border: none; color: white; }
+
+    .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 720px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; font-size: 13px; letter-spacing: .2px; }
+    tbody tr:hover { background: rgba(255,255,255,.03); }
+    .tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; border:1px solid var(--border); color: var(--muted); }
+    .row-actions { display:flex; gap:6px; }
+    .muted { color: var(--muted); }
+
+    details { background: var(--card); border:1px solid var(--border); border-radius: 16px; }
+    details > summary { cursor: pointer; list-style: none; padding: 14px 16px; }
+    details > summary::-webkit-details-marker { display:none; }
+
+    .footer { color: var(--muted); font-size: 12px; margin: 24px 0 8px; text-align: center; }
+  </style>
+</head>
+<body data-theme="dark">
+  <div class="container">
+    <header>
+      <div>
+        <h1>İngilis Sözləri</h1>
+        <div class="sub">Sürətli axtarış, öz sözlərini əlavə et, quiz ilə yoxla.</div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="btn" id="themeBtn" title="Gündüz/Gecə">🌙/☀️</button>
+        <button class="btn ghost" id="exportBtn" title="JSON kimi ixrac et">İxrac</button>
+        <label class="btn ghost" for="importFile" title="JSON yüklə">İdxal
+          <input id="importFile" type="file" accept="application/json" style="display:none" />
+        </label>
+      </div>
+    </header>
+
+    <!-- Axtarış və sürətli əlavə -->
+    <div class="toolbar card pad">
+      <input id="search" class="input" placeholder="Axtar: english, tərcümə, və ya nümunə..." />
+      <button class="btn" id="randomBtn">Təsadüfi söz</button>
+      <button class="btn" id="toggleAz">Tərcüməni gizlət/göstər</button>
+      <button class="btn primary" id="addOpen">Söz əlavə et</button>
+    </div>
+
+    <!-- Siyahı -->
+    <div class="card pad" style="margin-top:14px;">
+      <div style="overflow:auto;">
+        <table id="wordTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>İngilis sözü</th>
+              <th>Tərcümə (AZ)</th>
+              <th>Növlər</th>
+              <th>Nümunə cümlə</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Əlavə formu -->
+    <details id="addPanel" style="margin-top:14px;" class="card">
+      <summary><strong>Yeni söz əlavə et</strong></summary>
+      <div class="pad">
+        <div class="grid">
+          <div>
+            <label class="muted">İngilis sözü</label>
+            <input id="enIn" class="input" placeholder="e.g. achieve" />
+          </div>
+          <div>
+            <label class="muted">Tərcümə (AZ)</label>
+            <input id="azIn" class="input" placeholder="e.g. nail olmaq" />
+          </div>
+          <div>
+            <label class="muted">Nitq hissəsi (istəyə görə)</label>
+            <select id="posIn" class="input">
+              <option value="">—</option>
+              <option>noun</option>
+              <option>verb</option>
+              <option>adjective</option>
+              <option>adverb</option>
+              <option>phrase</option>
+            </select>
+          </div>
+          <div>
+            <label class="muted">Nümunə cümlə (istəyə görə)</label>
+            <input id="exIn" class="input" placeholder="She achieved her goals." />
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button class="btn primary" id="addBtn">Əlavə et</button>
+          <button class="btn ghost" id="clearBtn">Sahələri təmizlə</button>
+        </div>
+      </div>
+    </details>
+
+    <!-- Quiz -->
+    <details style="margin-top:14px;" class="card" open>
+      <summary><strong>Tez Quiz</strong> — İngiliscəni yaz, Azərbaycan dilini cavabla (və ya əksinə)</summary>
+      <div class="pad" id="quizBox">
+        <div class="grid">
+          <div>
+            <div class="muted">Sual</div>
+            <div id="qText" style="font-size:20px; font-weight:700; margin:6px 0 10px;">—</div>
+          </div>
+          <div>
+            <div class="muted">Cavabını yaz</div>
+            <input id="answerIn" class="input" placeholder="tərcümə" />
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
+          <button class="btn primary" id="checkBtn">Yoxla</button>
+          <button class="btn" id="nextBtn">Növbəti</button>
+          <span id="result" class="muted"></span>
+          <label style="margin-left:auto; display:flex; gap:6px; align-items:center;" class="muted">
+            <input type="checkbox" id="reverseMode" /> Əks rejim (AZ → EN)
+          </label>
+        </div>
+      </div>
+    </details>
+
+    <div class="footer">Yerlı saxlanma istifadə olunur (LocalStorage). Sözlərin brauzerində qalır.</div>
+  </div>
+
+  <script>
+    // ====== Data & Storage ======
+    const STORAGE_KEY = 'vocabWords_v1';
+    const initialWords = [
+      { en: 'achieve', az: 'nail olmaq', pos: 'verb', ex: 'She achieved her goals.' },
+      { en: 'improve', az: 'yaxşılaşdırmaq', pos: 'verb', ex: 'You can improve your skills by practicing.' },
+      { en: 'reliable', az: 'etibarlı', pos: 'adjective', ex: 'He is a reliable friend.' },
+      { en: 'opportunity', az: 'imkan, fürsət', pos: 'noun', ex: 'This job is a great opportunity.' },
+      { en: 'curious', az: 'maraqı olan', pos: 'adjective', ex: 'Children are naturally curious.' },
+      { en: 'challenge', az: 'çağırış, çətin məsələ', pos: 'noun', ex: 'This task is a real challenge.' },
+      { en: 'consistency', az: 'müntəzəmlik, davamlılıq', pos: 'noun', ex: 'Consistency is the key to success.' },
+      { en: 'accurate', az: 'dəqiq', pos: 'adjective', ex: 'The information is accurate.' },
+      { en: 'brief', az: 'qısa', pos: 'adjective', ex: 'Keep your answer brief.' },
+      { en: 'explain', az: 'izah etmək', pos: 'verb', ex: 'Can you explain this rule?' }
+    ];
+
+    function loadWords() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        if (Array.isArray(saved) && saved.length) return saved;
+      } catch {}
+      return initialWords.slice();
+    }
+    function saveWords(list) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+
+    let words = loadWords();
+    let showAz = true;
+
+    // ====== DOM ======
+    const tbody = document.querySelector('#wordTable tbody');
+    const search = document.getElementById('search');
+    const toggleAzBtn = document.getElementById('toggleAz');
+    const randomBtn = document.getElementById('randomBtn');
+
+    const addPanel = document.getElementById('addPanel');
+    const addOpen = document.getElementById('addOpen');
+    const enIn = document.getElementById('enIn');
+    const azIn = document.getElementById('azIn');
+    const posIn = document.getElementById('posIn');
+    const exIn = document.getElementById('exIn');
+    const addBtn = document.getElementById('addBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    const themeBtn = document.getElementById('themeBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const importFile = document.getElementById('importFile');
+
+    // Quiz
+    const qText = document.getElementById('qText');
+    const answerIn = document.getElementById('answerIn');
+    const checkBtn = document.getElementById('checkBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const result = document.getElementById('result');
+    const reverseMode = document.getElementById('reverseMode');
+
+    // ====== Render ======
+    function render(filter = '') {
+      const q = filter.trim().toLowerCase();
+      tbody.innerHTML = '';
+      words
+        .map((w, i) => ({...w, idx: i+1}))
+        .filter(w => !q ||
+          w.en.toLowerCase().includes(q) ||
+          w.az.toLowerCase().includes(q) ||
+          (w.ex||'').toLowerCase().includes(q)
+        )
+        .forEach(w => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="muted">${w.idx}</td>
+            <td><strong>${escapeHtml(w.en)}</strong></td>
+            <td>${showAz ? escapeHtml(w.az) : '<span class="muted">— gizlidir —</span>'}</td>
+            <td>${w.pos ? `<span class="tag">${escapeHtml(w.pos)}</span>` : ''}</td>
+            <td class="muted">${escapeHtml(w.ex || '')}</td>
+            <td class="row-actions">
+              <button class="btn ghost" title="Düzəliş et">✏️</button>
+              <button class="btn danger" title="Sil">🗑️</button>
+            </td>`;
+          const [editBtn, delBtn] = tr.querySelectorAll('button');
+          editBtn.addEventListener('click', () => startEdit(w.idx-1));
+          delBtn.addEventListener('click', () => removeWord(w.idx-1));
+          tbody.appendChild(tr);
+        });
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+
+    function startEdit(i){
+      const w = words[i];
+      addPanel.open = true;
+      enIn.value = w.en; azIn.value = w.az; posIn.value = w.pos || ''; exIn.value = w.ex || '';
+      addBtn.textContent = 'Yadda saxla';
+      addBtn.dataset.editIndex = i;
+    }
+
+    function removeWord(i){
+      if (!confirm('Bu sözü silmək istəyirsən?')) return;
+      words.splice(i,1); saveWords(words); render(search.value);
+    }
+
+    // ====== Events ======
+    search.addEventListener('input', e => render(e.target.value));
+    toggleAzBtn.addEventListener('click', () => { showAz = !showAz; render(search.value); });
+    randomBtn.addEventListener('click', () => {
+      const i = Math.floor(Math.random()*words.length);
+      const w = words[i];
+      alert(`${w.en} → ${w.az}`);
+    });
+
+    addOpen.addEventListener('click', () => { addPanel.open = true; enIn.focus(); });
+    clearBtn.addEventListener('click', () => { enIn.value = azIn.value = exIn.value = ''; posIn.value = ''; enIn.focus(); });
+
+    addBtn.addEventListener('click', () => {
+      const en = enIn.value.trim();
+      const az = azIn.value.trim();
+      const pos = posIn.value;
+      const ex = exIn.value.trim();
+      if (!en || !az) { alert('Zəhmət olmasa həm "İngilis sözü", həm də "Tərcümə" yaz.'); return; }
+
+      const editIndex = addBtn.dataset.editIndex;
+      const item = { en, az, pos, ex };
+      if (editIndex !== undefined) {
+        words[Number(editIndex)] = item;
+        addBtn.textContent = 'Əlavə et';
+        delete addBtn.dataset.editIndex;
+      } else {
+        words.unshift(item);
+      }
+      saveWords(words); render(search.value); clearBtn.click();
+    });
+
+    // Tema
+    themeBtn.addEventListener('click', () => {
+      const el = document.body; const isDark = el.getAttribute('data-theme') !== 'light';
+      el.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      themeBtn.textContent = isDark ? '🌙' : '☀️';
+    });
+
+    // Export / Import
+    exportBtn.addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(words, null, 2)], {type: 'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'sozler.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    importFile.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      try {
+        const data = JSON.parse(text);
+        if (!Array.isArray(data)) throw new Error('Array deyil');
+        words = data.map(x => ({ en: String(x.en||'').trim(), az: String(x.az||'').trim(), pos: x.pos||'', ex: x.ex||'' }))
+                    .filter(x => x.en && x.az);
+        saveWords(words); render(search.value);
+        alert('Uğurla idxal olundu!');
+      } catch (err) { alert('JSON formatı düzgün deyil.'); }
+      importFile.value = '';
+    });
+
+    // ====== Quiz ======
+    let quizIndex = -1; let quizItem = null;
+    function newQuestion(){
+      if (!words.length) { qText.textContent = 'Söz yoxdur. Əlavə et!'; return; }
+      quizIndex = Math.floor(Math.random()*words.length);
+      quizItem = words[quizIndex];
+      const reverse = reverseMode.checked;
+      qText.textContent = reverse ? quizItem.az : quizItem.en;
+      answerIn.value = ''; result.textContent = '';
+      answerIn.focus();
+    }
+
+    function normalize(s){
+      return String(s).trim().toLowerCase().replace(/\s+/g,' ');
+    }
+
+    checkBtn.addEventListener('click', () => {
+      if (!quizItem) return;
+      const reverse = reverseMode.checked;
+      const expected = normalize(reverse ? quizItem.en : quizItem.az);
+      const got = normalize(answerIn.value);
+      if (!got) { result.textContent = 'Cavab yaz!'; return; }
+      const ok = expected === got || expected.split(',')[0] === got;
+      result.textContent = ok ? '✅ Düzgün!' : `❌ Düzgün cavab: ${reverse ? quizItem.en : quizItem.az}`;
+    });
+
+    nextBtn.addEventListener('click', newQuestion);
+    reverseMode.addEventListener('change', newQuestion);
+
+    // İlk render
+    render();
+    newQuestion();
+  </script>
+</body>
+</html>
